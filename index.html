@@ -379,8 +379,10 @@
       font-size: 0.95rem;
       line-height: 1.5;
     ">
-      Welcome To "<span class="gold-name">
-        BITUOC
+      Welcome 
+      <p>To</p>
+      "<span class="gold-name">
+        BIT Unofficial Calculator
       </span>"
       <p> This website is helps to calculate</p>
       
@@ -464,7 +466,9 @@
    <a onclick="handleOption('sgpa')">
     📘 Calculate SGPA
    </a>
+   <a onclick="handleOption('cgpa')">🎓 Live CGPA</a>
   </div>
+  
   <!-- SGPA Main App -->
   <div class="main-content" id="app">
   </div>
@@ -500,6 +504,43 @@ function goHome() {
   });
 </script>
 <script>
+
+function calculateCGPAFromFirestore() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  
+  const db = firebase.firestore();
+  db.collection("users").doc(user.uid).get().then(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      const semesters = data.semesters || [];
+      
+      let totalCredit = 0;
+      let weightedSum = 0;
+      
+      semesters.forEach(sem => {
+        const credit = sem.credit || 0;
+        const sgpa = sem.sgpa || 0;
+        
+        totalCredit += credit;
+        weightedSum += sgpa * credit;
+      });
+      
+      const cgpa = totalCredit > 0 ? (weightedSum / totalCredit).toFixed(2) : "0.00";
+      
+      const resultBox = document.getElementById("cgpa-output");
+      if (resultBox) {
+        resultBox.textContent = `🎯 CGPA: ${cgpa}`;
+      }
+      
+    } else {
+      console.error("No such user document!");
+    }
+  }).catch(error => {
+    console.error("Error getting user document:", error);
+  });
+}
+
   const overlay = document.getElementById("overlay");
   const sidebar = document.getElementById("sidebar");
   const intro = document.getElementById("intro");
@@ -514,6 +555,43 @@ function goHome() {
     sidebar.classList.remove("active");
     overlay.classList.remove("active");
   }
+  
+  function calculateCGPAFromFirestore() {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    alert("User not logged in");
+    return;
+  }
+  
+  db.collection("users").doc(user.uid).get()
+    .then((doc) => {
+      if (!doc.exists) {
+        alert("No data found for user.");
+        return;
+      }
+      
+      const data = doc.data();
+      let totalWeighted = 0;
+      let totalCredits = 0;
+      
+      for (let i = 1; i <= 8; i++) {
+        const sgpa = parseFloat(data[`sem${i}`]);
+        const credit = parseFloat(data[`credit${i}`]);
+        
+        if (!isNaN(sgpa) && !isNaN(credit)) {
+          totalWeighted += sgpa * credit;
+          totalCredits += credit;
+        }
+      }
+      
+      const cgpa = totalCredits > 0 ? (totalWeighted / totalCredits).toFixed(2) : '--';
+      document.querySelector(".glow-box div").innerText = `CGPA: ${cgpa}`;
+    })
+    .catch((error) => {
+      console.error("Error fetching data:", error);
+      alert("Failed to fetch data.");
+    });
+}
 
   function handleOption(option) {
     closeMenu();
@@ -544,7 +622,41 @@ function goHome() {
         </div>
       </div>`;
     }
-
+    
+if (option === 'cgpa') {
+  app.innerHTML = `
+  <div class="container" style="padding: 20px;">
+    <div class="glow-box" style="padding: 20px; text-align: center; width: 100%; max-width: 500px; margin: auto; margin-top: 50px;">
+      <h2 style="color: var(--yellow); margin-bottom: 20px;">📊 Current CGPA</h2>
+<div id="cgpa-output" style="
+  font-size: 1.5rem;
+  color: white;
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.05);
+">
+  Calculating...
+</div>
+      <div id="cgpa-description" style="color: #ccc; font-size: 0.95rem; line-height: 1.5;">
+        This CGPA is calculated based on the
+        <span class="gold-name">
+SGPA
+        </span> and 
+        <span class="gold-name">
+CREDITS
+        </span>
+         values you've entered in your "Profile Section". Make sure all semesters are updated for accurate results.
+      </div>
+    </div>
+  </div>
+`;
+  
+  setTimeout(() => {
+    calculateCGPAFromFirestore();
+  }, 0);
+}
     if (option === 'profile') {
   app.innerHTML = `
   <div class="container" style="display: flex; flex-direction: column; height: calc(100% - 50px);">
@@ -760,6 +872,40 @@ function loadProfileData() {
       }
     });
   });
+  
+  function calculateCGPAFromFirestore() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  
+  const db = firebase.firestore();
+  db.collection("users").doc(user.uid).get().then(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      const semesters = data.semesters || [];
+      
+      let totalCredits = 0;
+      let weightedSum = 0;
+      
+      semesters.forEach(sem => {
+        const credit = sem.credit || 0;
+        const sgpa = sem.sgpa || 0;
+        totalCredits += credit;
+        weightedSum += sgpa * credit;
+      });
+      
+      const cgpa = totalCredits > 0 ? (weightedSum / totalCredits).toFixed(2) : "0.00";
+      
+      const outputBox = document.getElementById("cgpa-output");
+      if (outputBox) {
+        outputBox.textContent = `🎯 CGPA: ${cgpa}`;
+      }
+    } else {
+      console.warn("User document not found.");
+    }
+  }).catch(err => {
+    console.error("Error fetching data for CGPA:", err);
+  });
+}
 </script>
  </body>
 </html>
