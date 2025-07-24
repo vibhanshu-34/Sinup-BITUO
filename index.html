@@ -619,37 +619,44 @@ function goHome() {
     document.getElementById("cgpa-result").innerText = "SGPA: " + sgpa.toFixed(2);
   }
 
-  function saveProfile() {
-    const user = firebase.auth().currentUser;
-    if (!user) {
-      alert("You must be logged in.");
-      return;
-    }
-
-    const profile = {
-      uid: user.uid,
-      email: user.email,
-      firstName: document.getElementById("firstName").value.trim(),
-      lastName: document.getElementById("lastName").value.trim(),
-      branch: document.getElementById("branch").value.trim(),
-      sGPA: []
-    };
-
-    for (let i = 1; i <= 8; i++) {
-      const semInput = document.getElementById(`sem${i}`);
-      profile.sGPA.push(semInput && semInput.value ? parseFloat(semInput.value) : null);
-    }
-
-    db.collection("users").doc(user.uid).set(profile, { merge: true })
-      .then(() => {
-        alert("✅ Profile saved to Firebase!");
-      })
-      .catch((error) => {
-        console.error("❌ Error saving profile:", error);
-        alert("❌ Failed to save profile.");
-      });
+function saveProfile() {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    alert("You must be logged in.");
+    return;
   }
-
+  
+  const firstName = document.getElementById("firstName").value.trim();
+  const lastName = document.getElementById("lastName").value.trim();
+  const profile = {
+    uid: user.uid,
+    email: user.email,
+    firstName,
+    lastName,
+    branch: document.getElementById("branch").value.trim(),
+    sGPA: []
+  };
+  
+  for (let i = 1; i <= 8; i++) {
+    const semInput = document.getElementById(`sem${i}`);
+    profile.sGPA.push(semInput && semInput.value ? parseFloat(semInput.value) : null);
+  }
+  
+  db.collection("users").doc(user.uid).set(profile, { merge: true })
+    .then(() => {
+      alert("✅ Profile saved to Firebase!");
+      
+      // ✅ Instantly update greeting text on save
+      const greeting = document.getElementById("userGreeting");
+      if (greeting) {
+        greeting.textContent = `Hi ${firstName} ${lastName}`;
+      }
+    })
+    .catch((error) => {
+      console.error("❌ Error saving profile:", error);
+      alert("❌ Failed to save profile.");
+    });
+}
   function loadProfileData() {
     const user = firebase.auth().currentUser;
     if (!user) return;
