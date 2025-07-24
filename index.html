@@ -596,14 +596,8 @@
       alert("❌ Failed to save profile.");
     });
 }
-    for (let i = 1; i <= 8; i++) {
-      const val = document.getElementById(`sem${i}`).value.trim();
-      profile.sGPA.push(val ? parseFloat(val) : null);
-    }
-
-    localStorage.setItem("profileData", JSON.stringify(profile));
-    alert("✅ Profile saved successfully.");
-  }
+    
+  
   </script>
   <script>
    document.addEventListener("DOMContentLoaded", () => {
