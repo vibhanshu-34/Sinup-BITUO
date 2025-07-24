@@ -555,30 +555,37 @@ function goHome() {
       <input type="text" id="branch" class="input-box" placeholder="Branch">
     </div>
 
-    <div class="glow-box sgpa-section" style="flex: 2; display: flex; flex-direction: column; overflow: hidden;">
-      <h2>🎓 Semester-wise SGPA</h2>
-      <div style="display: flex; flex: 1; gap: 20px; padding: 10px 0;">
-        <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
-          ${[1, 2, 3, 4].map(i => `
-            <div class="sem-row" style="display: flex; justify-content: space-between; align-items: center; background-color: #1c1c1c; border-radius: 6px; padding: 6px 10px;">
-              <label for="sem${i}" style="color: var(--yellow); font-size: 0.9rem;">SEM ${i}</label>
-              <input type="number" id="sem${i}" placeholder="SGPA ${i}" step="0.01" min="0" max="10"
-                     style="width: 50%; padding: 6px; border-radius: 4px; border: none; background-color: #2a2a2a; color: white;">
-            </div>`).join('')}
+<div class="glow-box sgpa-section" style="flex: 2; display: flex; flex-direction: column; overflow: hidden;">
+  <h2>SGPA & Credits</h2>
+  
+  <!-- SCROLLABLE VERTICAL LIST -->
+  <div style="flex: 1; overflow-y: auto; padding-right: 10px;">
+    ${[1, 2, 3, 4, 5, 6, 7, 8].map(i => `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background-color: #1c1c1c; padding: 10px; border-radius: 8px;">
+        <!-- SGPA input -->
+        <div style="flex: 1; margin-right: 10px;">
+          <label for="sem${i}" style="color: var(--yellow); font-size: 0.9rem;">SEM ${i} SGPA</label>
+          <input type="number" id="sem${i}" placeholder="SGPA ${i}" step="0.01" min="0" max="10"
+                 style="width: 100%; padding: 6px; border-radius: 4px; border: none; background-color: #2a2a2a; color: white;">
         </div>
-        <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
-          ${[5, 6, 7, 8].map(i => `
-            <div class="sem-row" style="display: flex; justify-content: space-between; align-items: center; background-color: #1c1c1c; border-radius: 6px; padding: 6px 10px;">
-              <label for="sem${i}" style="color: var(--yellow); font-size: 0.9rem;">SEM ${i}</label>
-              <input type="number" id="sem${i}" placeholder="SGPA ${i}" step="0.01" min="0" max="10"
-                     style="width: 50%; padding: 6px; border-radius: 4px; border: none; background-color: #2a2a2a; color: white;">
-            </div>`).join('')}
+
+        <!-- Credit input -->
+        <div style="flex: 1;">
+          <label for="credit${i}" style="color: var(--yellow); font-size: 0.9rem;">SEM ${i} Credits</label>
+          <input type="number" id="credit${i}" placeholder="Credit ${i}" min="0"
+                 style="width: 100%; padding: 6px; border-radius: 4px; border: none; background-color: #2a2a2a; color: white;">
         </div>
       </div>
-<div style="display: flex; justify-content: center; gap: 20px; margin-top: auto;">
-  <button class="btn" onclick="saveProfile()">💾 Save</button>
-  <button class="btn" onclick="logoutUser()" style="background-color: crimson; color: white;">🚪 Logout</button>
+    `).join('')}
+  </div>
+
+  <!-- Save & Logout buttons -->
+  <div style="display: flex; justify-content: center; gap: 20px; margin-top: 10px;">
+    <button class="btn" onclick="saveProfile()">💾 Save</button>
+    <button class="btn" onclick="logoutUser()" style="background-color: crimson; color: white;">🚪 Logout</button>
+  </div>
 </div>
+
     </div>
   </div>`;
   
@@ -681,67 +688,52 @@ function goHome() {
 
 function saveProfile() {
   const user = firebase.auth().currentUser;
-  if (!user) {
-    alert("You must be logged in.");
-    return;
-  }
+  if (!user) return alert("Please login first");
   
-  const firstName = document.getElementById("firstName").value.trim();
-  const lastName = document.getElementById("lastName").value.trim();
   const profile = {
-    uid: user.uid,
-    email: user.email,
-    firstName,
-    lastName,
-    branch: document.getElementById("branch").value.trim(),
-    sGPA: []
+    firstName: document.getElementById("firstName").value,
+    lastName: document.getElementById("lastName").value,
+    branch: document.getElementById("branch").value,
+    semesters: [] // store array of { sgpa, credit }
   };
   
   for (let i = 1; i <= 8; i++) {
-    const semInput = document.getElementById(`sem${i}`);
-    profile.sGPA.push(semInput && semInput.value ? parseFloat(semInput.value) : null);
+    const sgpa = parseFloat(document.getElementById(`sem${i}`).value) || 0;
+    const credit = parseFloat(document.getElementById(`credit${i}`).value) || 0;
+    profile.semesters.push({ sgpa, credit });
   }
   
   db.collection("users").doc(user.uid).set(profile, { merge: true })
-    .then(() => {
-      alert("✅ Profile saved to Firebase!");
-      
-      // ✅ Instantly update greeting text on save
-      const greeting = document.getElementById("userGreeting");
-      if (greeting) {
-        greeting.textContent = `Hi ${firstName} ${lastName}`;
-      }
-    })
+    .then(() => alert("✅ Profile saved to Firebase!"))
     .catch((error) => {
       console.error("❌ Error saving profile:", error);
       alert("❌ Failed to save profile.");
     });
 }
-  function loadProfileData() {
-    const user = firebase.auth().currentUser;
-    if (!user) return;
-
-    const docRef = db.collection("users").doc(user.uid);
-    docRef.get().then((doc) => {
-      if (doc.exists) {
-        const data = doc.data();
-        document.getElementById("firstName").value = data.firstName || "";
-        document.getElementById("lastName").value = data.lastName || "";
-        document.getElementById("branch").value = data.branch || "";
-
-        if (Array.isArray(data.sGPA)) {
-          for (let i = 0; i < 8; i++) {
-            const semInput = document.getElementById(`sem${i + 1}`);
-            if (semInput && data.sGPA[i] !== undefined && data.sGPA[i] !== null) {
-              semInput.value = data.sGPA[i];
-            }
-          }
+function loadProfileData() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  
+  db.collection("users").doc(user.uid).get().then((doc) => {
+    if (!doc.exists) return;
+    
+    const data = doc.data();
+    
+    document.getElementById("firstName").value = data.firstName || "";
+    document.getElementById("lastName").value = data.lastName || "";
+    document.getElementById("branch").value = data.branch || "";
+    
+    if (Array.isArray(data.semesters)) {
+      data.semesters.forEach((sem, i) => {
+        const index = i + 1;
+        if (index <= 8) {
+          document.getElementById(`sem${index}`).value = sem.sgpa ?? '';
+          document.getElementById(`credit${index}`).value = sem.credit ?? '';
         }
-      }
-    }).catch(err => {
-      console.error("Error loading profile:", err);
-    });
-  }
+      });
+    }
+  });
+}
 </script>
 
 <script>
