@@ -403,8 +403,8 @@
   <div class="main-content" id="app">
   </div>
   <!-- Script -->
-  <script>
-   const overlay = document.getElementById("overlay");
+<script>
+  const overlay = document.getElementById("overlay");
   const sidebar = document.getElementById("sidebar");
   const intro = document.getElementById("intro");
   const app = document.getElementById("app");
@@ -482,6 +482,11 @@
           <button class="btn" onclick="saveProfile()" style="margin-top: auto; align-self: center;">💾 Save</button>
         </div>
       </div>`;
+
+      // ✅ Load profile data after UI is ready
+      setTimeout(() => {
+        loadProfileData();
+      }, 0);
     }
   }
 
@@ -567,40 +572,65 @@
   }
 
   function saveProfile() {
-  const user = firebase.auth().currentUser;
-  if (!user) {
-    alert("You must be logged in.");
-    return;
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      alert("You must be logged in.");
+      return;
+    }
+
+    const profile = {
+      uid: user.uid,
+      email: user.email,
+      firstName: document.getElementById("firstName").value.trim(),
+      lastName: document.getElementById("lastName").value.trim(),
+      branch: document.getElementById("branch").value.trim(),
+      sGPA: []
+    };
+
+    for (let i = 1; i <= 8; i++) {
+      const semInput = document.getElementById(`sem${i}`);
+      profile.sGPA.push(semInput && semInput.value ? parseFloat(semInput.value) : null);
+    }
+
+    db.collection("users").doc(user.uid).set(profile, { merge: true })
+      .then(() => {
+        alert("✅ Profile saved to Firebase!");
+      })
+      .catch((error) => {
+        console.error("❌ Error saving profile:", error);
+        alert("❌ Failed to save profile.");
+      });
   }
-  
-  const profile = {
-    uid: user.uid,
-    email: user.email,
-    firstName: document.getElementById("firstName").value.trim(),
-    lastName: document.getElementById("lastName").value.trim(),
-    branch: document.getElementById("branch").value.trim(),
-    sGPA: []
-  };
-  
-  for (let i = 1; i <= 8; i++) {
-    const semInput = document.getElementById(`sem${i}`);
-    profile.sGPA.push(semInput && semInput.value ? parseFloat(semInput.value) : null);
-  }
-  
-  db.collection("users").doc(user.uid).set(profile, { merge: true })
-    .then(() => {
-      alert("✅ Profile saved to Firebase!");
-    })
-    .catch((error) => {
-      console.error("❌ Error saving profile:", error);
-      alert("❌ Failed to save profile.");
+
+  function loadProfileData() {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const docRef = db.collection("users").doc(user.uid);
+    docRef.get().then((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        document.getElementById("firstName").value = data.firstName || "";
+        document.getElementById("lastName").value = data.lastName || "";
+        document.getElementById("branch").value = data.branch || "";
+
+        if (Array.isArray(data.sGPA)) {
+          for (let i = 0; i < 8; i++) {
+            const semInput = document.getElementById(`sem${i + 1}`);
+            if (semInput && data.sGPA[i] !== undefined && data.sGPA[i] !== null) {
+              semInput.value = data.sGPA[i];
+            }
+          }
+        }
+      }
+    }).catch(err => {
+      console.error("Error loading profile:", err);
     });
-}
-    
-  
-  </script>
-  <script>
-   document.addEventListener("DOMContentLoaded", () => {
+  }
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
     const loginBox = document.getElementById("login-overlay");
     const loginBtn = document.getElementById("googleLogin");
 
@@ -611,37 +641,18 @@
     }
 
     auth.onAuthStateChanged(user => {
-  if (user) {
-    if (loginBox) loginBox.remove();
-    document.documentElement.style.overflow = '';
-    document.body.style.overflow = '';
-    
-    // 🔽 LOAD PROFILE FROM FIRESTORE
-    const docRef = db.collection("users").doc(user.uid);
-    docRef.get().then((doc) => {
-      if (doc.exists) {
-        const data = doc.data();
-        document.getElementById("firstName").value = data.firstName || "";
-        document.getElementById("lastName").value = data.lastName || "";
-        document.getElementById("branch").value = data.branch || "";
-        
-        if (Array.isArray(data.sGPA)) {
-          for (let i = 0; i < 8; i++) {
-            const semInput = document.getElementById(`sem${i + 1}`);
-            if (semInput && data.sGPA[i] !== undefined && data.sGPA[i] !== null) {
-              semInput.value = data.sGPA[i];
-            }
-          }
-        }
+      if (user) {
+        if (loginBox) loginBox.remove();
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+        // You can optionally pre-load profile here
+        // But we now load it inside handleOption('profile') only
+      } else {
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
       }
     });
-    
-  } else {
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-  }
-});
   });
-  </script>
+</script>
  </body>
 </html>
