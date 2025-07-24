@@ -311,22 +311,22 @@
     }
   </style>
   <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
-  </script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js">
-  </script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
-   const firebaseConfig = {
-    apiKey: "AIzaSyCgrs2rRunTTW2LG8JzlUe39iqa-y6okfE",
-    authDomain: "bituo--calculator.firebaseapp.com",
-    projectId: "bituo--calculator",
-    storageBucket: "bituo--calculator.firebasestorage.app",
-    messagingSenderId: "569993603523",
-    appId: "1:569993603523:web:2de807c54afaaa9225f576"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const provider = new firebase.auth.GoogleAuthProvider();
+    const firebaseConfig = {
+      apiKey: "AIzaSyCgrs2rRunTTW2LG8JzlUe39iqa-y6okfE",
+      authDomain: "bituo--calculator.firebaseapp.com",
+      projectId: "bituo--calculator",
+      storageBucket: "bituo--calculator.firebasestorage.app",
+      messagingSenderId: "569993603523",
+      appId: "1:569993603523:web:2de807c54afaaa9225f576"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const db = firebase.firestore(); // 🔥 This connects Firestore
   </script>
  </head>
  <body>
@@ -567,13 +567,35 @@
   }
 
   function saveProfile() {
-    const profile = {
-      firstName: document.getElementById("firstName").value.trim(),
-      lastName: document.getElementById("lastName").value.trim(),
-      branch: document.getElementById("branch").value.trim(),
-      sGPA: []
-    };
-
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    alert("You must be logged in.");
+    return;
+  }
+  
+  const profile = {
+    uid: user.uid,
+    email: user.email,
+    firstName: document.getElementById("firstName").value.trim(),
+    lastName: document.getElementById("lastName").value.trim(),
+    branch: document.getElementById("branch").value.trim(),
+    sGPA: []
+  };
+  
+  for (let i = 1; i <= 8; i++) {
+    const semInput = document.getElementById(`sem${i}`);
+    profile.sGPA.push(semInput && semInput.value ? parseFloat(semInput.value) : null);
+  }
+  
+  db.collection("users").doc(user.uid).set(profile, { merge: true })
+    .then(() => {
+      alert("✅ Profile saved to Firebase!");
+    })
+    .catch((error) => {
+      console.error("❌ Error saving profile:", error);
+      alert("❌ Failed to save profile.");
+    });
+}
     for (let i = 1; i <= 8; i++) {
       const val = document.getElementById(`sem${i}`).value.trim();
       profile.sGPA.push(val ? parseFloat(val) : null);
@@ -595,15 +617,36 @@
     }
 
     auth.onAuthStateChanged(user => {
-      if (user) {
-        if (loginBox) loginBox.remove();
-        document.documentElement.style.overflow = '';
-        document.body.style.overflow = '';
-      } else {
-        document.documentElement.style.overflow = 'hidden';
-        document.body.style.overflow = 'hidden';
+  if (user) {
+    if (loginBox) loginBox.remove();
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
+    
+    // 🔽 LOAD PROFILE FROM FIRESTORE
+    const docRef = db.collection("users").doc(user.uid);
+    docRef.get().then((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        document.getElementById("firstName").value = data.firstName || "";
+        document.getElementById("lastName").value = data.lastName || "";
+        document.getElementById("branch").value = data.branch || "";
+        
+        if (Array.isArray(data.sGPA)) {
+          for (let i = 0; i < 8; i++) {
+            const semInput = document.getElementById(`sem${i + 1}`);
+            if (semInput && data.sGPA[i] !== undefined && data.sGPA[i] !== null) {
+              semInput.value = data.sGPA[i];
+            }
+          }
+        }
       }
     });
+    
+  } else {
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+  }
+});
   });
   </script>
  </body>
