@@ -397,6 +397,7 @@
    <h3>
     Menu
    </h3>
+   <a onclick="goHome()">🏠 Home</a>
    <a onclick="handleOption('profile')">
     👤 Profile Section
    </a>
@@ -409,6 +410,11 @@
   </div>
   <!-- Script -->
 <script>
+function goHome() {
+  closeMenu();
+  app.style.display = "none";
+  intro.style.display = "flex";
+}
   firebase.auth().onAuthStateChanged((user) => {
     if (user) {
       const uid = user.uid;
