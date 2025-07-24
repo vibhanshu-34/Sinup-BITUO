@@ -374,13 +374,18 @@
    <button class="menu-button" id="menuBtn" onclick="openMenu()">
     ☰
    </button>
-   <div class="Heading">
-    <h1>
-     BITUO CALCULATOR
-     <h1>
-     </h1>
-    </h1>
-   </div>
+<div class="Heading">
+  <h1 id="userGreeting" style="
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;  /* you can adjust this value as needed */
+  font-size: 18px;
+  color: white;
+">
+  Hi
+</h1>
+</div>
   </nav>
   <!-- Overlay & Sidebar -->
   <div class="overlay" id="overlay" onclick="closeMenu()">
@@ -403,6 +408,31 @@
   <div class="main-content" id="app">
   </div>
   <!-- Script -->
+<script>
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+      const uid = user.uid;
+      
+      // Fetch from Firestore
+      firebase.firestore().collection("users").doc(uid).get().then((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          const firstName = data.firstName || "";
+          const lastName = data.lastName || "";
+          document.getElementById("userGreeting").textContent = `Hi ${firstName} ${lastName}`;
+        } else {
+          document.getElementById("userGreeting").textContent = "Hi User";
+        }
+      }).catch((error) => {
+        console.error("Error fetching user name:", error);
+        document.getElementById("userGreeting").textContent = "Hi User";
+      });
+      
+    } else {
+      document.getElementById("userGreeting").textContent = "Hi Guest";
+    }
+  });
+</script>
 <script>
   const overlay = document.getElementById("overlay");
   const sidebar = document.getElementById("sidebar");
