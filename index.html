@@ -480,43 +480,45 @@
     }
 
     if (option === 'profile') {
-      app.innerHTML = `
-      <div class="container" style="display: flex; flex-direction: column; height: calc(100% - 50px);">
-        <div class="glow-box profile-section" style="flex: 1; display: flex; flex-direction: column;">
-          <h2>👤 Profile Information</h2>
-          <input type="text" id="firstName" class="input-box" placeholder="First Name">
-          <input type="text" id="lastName" class="input-box" placeholder="Last Name">
-          <input type="text" id="branch" class="input-box" placeholder="Branch">
-        </div>
+  app.innerHTML = `
+  <div class="container" style="display: flex; flex-direction: column; height: calc(100% - 50px);">
+    <div class="glow-box profile-section" style="flex: 1; display: flex; flex-direction: column;">
+      <h2>👤 Profile Information</h2>
+      <input type="text" id="firstName" class="input-box" placeholder="First Name">
+      <input type="text" id="lastName" class="input-box" placeholder="Last Name">
+      <input type="text" id="branch" class="input-box" placeholder="Branch">
+    </div>
 
-        <div class="glow-box sgpa-section" style="flex: 2; display: flex; flex-direction: column; overflow: hidden;">
-          <h2>🎓 Semester-wise SGPA</h2>
-          <div style="display: flex; flex: 1; gap: 20px; padding: 10px 0;">
-            <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
-              ${[1, 2, 3, 4].map(i => `
-                <div class="sem-row" style="display: flex; justify-content: space-between; align-items: center; background-color: #1c1c1c; border-radius: 6px; padding: 6px 10px;">
-                  <label for="sem${i}" style="color: var(--yellow); font-size: 0.9rem;">SEM ${i}</label>
-                  <input type="number" id="sem${i}" placeholder="SGPA ${i}" step="0.01" min="0" max="10"
-                         style="width: 50%; padding: 6px; border-radius: 4px; border: none; background-color: #2a2a2a; color: white;">
-                </div>`).join('')}
-            </div>
-            <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
-              ${[5, 6, 7, 8].map(i => `
-                <div class="sem-row" style="display: flex; justify-content: space-between; align-items: center; background-color: #1c1c1c; border-radius: 6px; padding: 6px 10px;">
-                  <label for="sem${i}" style="color: var(--yellow); font-size: 0.9rem;">SEM ${i}</label>
-                  <input type="number" id="sem${i}" placeholder="SGPA ${i}" step="0.01" min="0" max="10"
-                         style="width: 50%; padding: 6px; border-radius: 4px; border: none; background-color: #2a2a2a; color: white;">
-                </div>`).join('')}
-            </div>
-          </div>
-          <button class="btn" onclick="saveProfile()" style="margin-top: auto; align-self: center;">💾 Save</button>
+    <div class="glow-box sgpa-section" style="flex: 2; display: flex; flex-direction: column; overflow: hidden;">
+      <h2>🎓 Semester-wise SGPA</h2>
+      <div style="display: flex; flex: 1; gap: 20px; padding: 10px 0;">
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
+          ${[1, 2, 3, 4].map(i => `
+            <div class="sem-row" style="display: flex; justify-content: space-between; align-items: center; background-color: #1c1c1c; border-radius: 6px; padding: 6px 10px;">
+              <label for="sem${i}" style="color: var(--yellow); font-size: 0.9rem;">SEM ${i}</label>
+              <input type="number" id="sem${i}" placeholder="SGPA ${i}" step="0.01" min="0" max="10"
+                     style="width: 50%; padding: 6px; border-radius: 4px; border: none; background-color: #2a2a2a; color: white;">
+            </div>`).join('')}
         </div>
-      </div>`;
-
-      // ✅ Load profile data after UI is ready
-      setTimeout(() => {
-        loadProfileData();
-      }, 0);
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
+          ${[5, 6, 7, 8].map(i => `
+            <div class="sem-row" style="display: flex; justify-content: space-between; align-items: center; background-color: #1c1c1c; border-radius: 6px; padding: 6px 10px;">
+              <label for="sem${i}" style="color: var(--yellow); font-size: 0.9rem;">SEM ${i}</label>
+              <input type="number" id="sem${i}" placeholder="SGPA ${i}" step="0.01" min="0" max="10"
+                     style="width: 50%; padding: 6px; border-radius: 4px; border: none; background-color: #2a2a2a; color: white;">
+            </div>`).join('')}
+        </div>
+      </div>
+<div style="display: flex; justify-content: center; gap: 20px; margin-top: auto;">
+  <button class="btn" onclick="saveProfile()">💾 Save</button>
+  <button class="btn" onclick="logoutUser()" style="background-color: crimson; color: white;">🚪 Logout</button>
+</div>
+    </div>
+  </div>`;
+  
+  setTimeout(() => {
+    loadProfileData();
+  }, 0);
     }
   }
 
@@ -526,6 +528,16 @@
     "BC": 7.5, "CC": 7, "CD": 6.5,
     "DD": 6, "DE": 5.5, "EE": 5, "FF": 0
   };
+  
+  function logoutUser() {
+  firebase.auth().signOut().then(() => {
+    alert("✅ You have been logged out.");
+    location.reload(); // Return to login overlay
+  }).catch((error) => {
+    console.error("❌ Logout failed:", error);
+    alert("❌ Logout failed.");
+  });
+}
 
   function clearInputs() {
     document.getElementById("subject").value = "";
