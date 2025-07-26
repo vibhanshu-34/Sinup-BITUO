@@ -802,6 +802,7 @@ function saveProfile() {
   if (!user) return alert("Please login first");
   
   const profile = {
+    gmail: user.email,
     firstName: document.getElementById("firstName").value,
     lastName: document.getElementById("lastName").value,
     branch: document.getElementById("branch").value,
