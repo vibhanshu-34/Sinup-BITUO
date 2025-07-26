@@ -816,7 +816,7 @@ function saveProfile() {
   }
   
   db.collection("users").doc(user.uid).set(profile, { merge: true })
-    .then(() => alert("✅ Profile saved to Firebase!"))
+    .then(() => alert("✅ Profile Saved !!"))
     .catch((error) => {
       console.error("❌ Error saving profile:", error);
       alert("❌ Failed to save profile.");
