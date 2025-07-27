@@ -57,8 +57,13 @@
       background-color: rgba(0, 0, 0, 0.8);
     }
 
-    .top-box { animation: slideDown 1s ease-out forwards; transform: translateY(-100vh); }
-    .bottom-box { animation: slideUp 1s ease-out forwards; transform: translateY(100vh); animation-delay: 0.5s; }
+    .top-box { animation: slideDown 1s ease-out forwards; transform: translateY(-100vh);
+      background: linear-gradient(45deg,black,gray);
+    
+    }
+    .bottom-box { animation: slideUp 1s ease-out forwards; transform: translateY(100vh); animation-delay: 0.5s; 
+      background: linear-gradient(45deg,black,gray);
+    }
 
     @keyframes slideDown { to { transform: translateY(0); } }
     @keyframes slideUp { to { transform: translateY(0); } }
@@ -80,7 +85,7 @@
       left: 0;
       height: 50px;
       width: 100%;
-      background-color: #111;
+      background: linear-gradient(45deg,black,gray);
       display: flex;
       align-items: center;
       padding: 0 15px;
@@ -120,8 +125,7 @@
       left: -100%;
       width: 60%;
       height: 100%;
-      background-color: #111;
-      border-right: 2px solid var(--yellow);
+      background: linear-gradient(45deg,gray,black);border-right: 2px solid var(--yellow);
       padding: 80px 20px 20px;
       box-shadow: 5px 0 15px var(--yellow);
       transition: left 0.4s ease;
@@ -818,14 +822,25 @@ function saveProfile() {
     semesters: [] // store array of { sgpa, credit }
   };
   
+  let totalCredits = 0;
+  let totalWeighted = 0;
+  
   for (let i = 1; i <= 8; i++) {
     const sgpa = parseFloat(document.getElementById(`sem${i}`).value) || 0;
     const credit = parseFloat(document.getElementById(`credit${i}`).value) || 0;
     profile.semesters.push({ sgpa, credit });
+    
+    totalCredits += credit;
+    totalWeighted += sgpa * credit;
   }
   
+  // ✅ Calculate CGPA based on collected data
+  const cgpa = totalCredits > 0 ? (totalWeighted / totalCredits).toFixed(2) : "0.00";
+  profile.cgpa = cgpa;
+  
+  // ✅ Save everything including CGPA
   db.collection("users").doc(user.uid).set(profile, { merge: true })
-    .then(() => alert("✅ Profile Saved !!"))
+    .then(() => alert(`✅ Profile Saved!\n🎓 CGPA: ${cgpa}`))
     .catch((error) => {
       console.error("❌ Error saving profile:", error);
       alert("❌ Failed to save profile.");
